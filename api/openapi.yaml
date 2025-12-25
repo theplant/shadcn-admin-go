@@ -1,0 +1,1026 @@
+openapi: 3.0.3
+info:
+  title: Shadcn Admin API
+  description: API for the Shadcn Admin dashboard application
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: Local development server
+
+paths:
+  # ==================== AUTH ====================
+  /auth/login:
+    post:
+      operationId: login
+      tags:
+        - Auth
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags:
+        - Auth
+      summary: Logout user
+      responses:
+        '200':
+          description: Successfully logged out
+
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags:
+        - Auth
+      summary: Get current authenticated user
+      responses:
+        '200':
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUser'
+        '401':
+          description: Not authenticated
+
+  # ==================== TASKS ====================
+  /tasks:
+    get:
+      operationId: listTasks
+      tags:
+        - Tasks
+      summary: List all tasks
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskStatus'
+        - name: priority
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TaskPriority'
+        - name: filter
+          in: query
+          schema:
+            type: string
+          description: Search filter for title or ID
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+
+    post:
+      operationId: createTask
+      tags:
+        - Tasks
+      summary: Create a new task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+
+  /tasks/{taskId}:
+    get:
+      operationId: getTask
+      tags:
+        - Tasks
+      summary: Get a task by ID
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      operationId: updateTask
+      tags:
+        - Tasks
+      summary: Update a task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          description: Task not found
+
+    delete:
+      operationId: deleteTask
+      tags:
+        - Tasks
+      summary: Delete a task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Task deleted
+        '404':
+          description: Task not found
+
+  # ==================== USERS ====================
+  /users:
+    get:
+      operationId: listUsers
+      tags:
+        - Users
+      summary: List all users
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserStatus'
+        - name: role
+          in: query
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserRole'
+        - name: username
+          in: query
+          schema:
+            type: string
+          description: Filter by username
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+
+    post:
+      operationId: createUser
+      tags:
+        - Users
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags:
+        - Users
+      summary: Get a user by ID
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    put:
+      operationId: updateUser
+      tags:
+        - Users
+      summary: Update a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+
+    delete:
+      operationId: deleteUser
+      tags:
+        - Users
+      summary: Delete a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+
+  /users/invite:
+    post:
+      operationId: inviteUser
+      tags:
+        - Users
+      summary: Invite a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteUserRequest'
+      responses:
+        '201':
+          description: User invited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # ==================== APPS ====================
+  /apps:
+    get:
+      operationId: listApps
+      tags:
+        - Apps
+      summary: List all app integrations
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [all, connected, notConnected]
+        - name: filter
+          in: query
+          schema:
+            type: string
+          description: Search filter for app name
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: List of apps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppListResponse'
+
+  /apps/{appId}/connect:
+    post:
+      operationId: connectApp
+      tags:
+        - Apps
+      summary: Connect an app integration
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: App connected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+
+  /apps/{appId}/disconnect:
+    post:
+      operationId: disconnectApp
+      tags:
+        - Apps
+      summary: Disconnect an app integration
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: App disconnected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+
+  # ==================== CHATS ====================
+  /chats:
+    get:
+      operationId: listChats
+      tags:
+        - Chats
+      summary: List all chat conversations
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by user name
+      responses:
+        '200':
+          description: List of chat conversations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatListResponse'
+
+  /chats/{chatId}:
+    get:
+      operationId: getChat
+      tags:
+        - Chats
+      summary: Get a chat conversation by ID
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat conversation details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatConversation'
+        '404':
+          description: Chat not found
+
+  /chats/{chatId}/messages:
+    post:
+      operationId: sendMessage
+      tags:
+        - Chats
+      summary: Send a message in a chat
+      parameters:
+        - name: chatId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessage'
+
+  # ==================== DASHBOARD ====================
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
+  /dashboard/overview:
+    get:
+      operationId: getDashboardOverview
+      tags:
+        - Dashboard
+      summary: Get dashboard overview chart data
+      responses:
+        '200':
+          description: Overview chart data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardOverview'
+
+  /dashboard/recent-sales:
+    get:
+      operationId: getRecentSales
+      tags:
+        - Dashboard
+      summary: Get recent sales data
+      responses:
+        '200':
+          description: Recent sales data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecentSalesResponse'
+
+components:
+  schemas:
+    # ==================== AUTH SCHEMAS ====================
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 7
+
+    LoginResponse:
+      type: object
+      required:
+        - user
+        - accessToken
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        accessToken:
+          type: string
+
+    AuthUser:
+      type: object
+      required:
+        - accountNo
+        - email
+        - role
+        - exp
+      properties:
+        accountNo:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: array
+          items:
+            type: string
+        exp:
+          type: integer
+          description: Token expiry timestamp
+
+    # ==================== TASK SCHEMAS ====================
+    TaskStatus:
+      type: string
+      enum:
+        - todo
+        - in progress
+        - done
+        - canceled
+        - backlog
+
+    TaskPriority:
+      type: string
+      enum:
+        - low
+        - medium
+        - high
+
+    TaskLabel:
+      type: string
+      enum:
+        - bug
+        - feature
+        - documentation
+
+    Task:
+      type: object
+      required:
+        - id
+        - title
+        - status
+        - label
+        - priority
+      properties:
+        id:
+          type: string
+          description: Task ID in format TASK-XXXX
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        label:
+          $ref: '#/components/schemas/TaskLabel'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        assignee:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - status
+        - label
+        - priority
+      properties:
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        label:
+          $ref: '#/components/schemas/TaskLabel'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        assignee:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        label:
+          $ref: '#/components/schemas/TaskLabel'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        assignee:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+
+    TaskListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # ==================== USER SCHEMAS ====================
+    UserStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+        - invited
+        - suspended
+
+    UserRole:
+      type: string
+      enum:
+        - superadmin
+        - admin
+        - cashier
+        - manager
+
+    User:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - username
+        - email
+        - status
+        - role
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        role:
+          $ref: '#/components/schemas/UserRole'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - email
+        - role
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phoneNumber:
+          type: string
+        status:
+          $ref: '#/components/schemas/UserStatus'
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    InviteUserRequest:
+      type: object
+      required:
+        - email
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UserListResponse:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # ==================== APP SCHEMAS ====================
+    App:
+      type: object
+      required:
+        - id
+        - name
+        - desc
+        - connected
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        desc:
+          type: string
+        logo:
+          type: string
+          description: SVG or image URL for the app logo
+        connected:
+          type: boolean
+
+    AppListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/App'
+
+    # ==================== CHAT SCHEMAS ====================
+    ChatUser:
+      type: object
+      required:
+        - id
+        - username
+        - fullName
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        title:
+          type: string
+        profile:
+          type: string
+          description: Profile image URL
+
+    ChatMessage:
+      type: object
+      required:
+        - sender
+        - message
+        - timestamp
+      properties:
+        sender:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ChatConversation:
+      type: object
+      required:
+        - id
+        - username
+        - fullName
+        - messages
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        fullName:
+          type: string
+        title:
+          type: string
+        profile:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessage'
+
+    SendMessageRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+
+    ChatListResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatConversation'
+
+    # ==================== DASHBOARD SCHEMAS ====================
+    DashboardStats:
+      type: object
+      required:
+        - totalRevenue
+        - subscriptions
+        - sales
+        - activeNow
+      properties:
+        totalRevenue:
+          type: object
+          properties:
+            value:
+              type: number
+            change:
+              type: string
+        subscriptions:
+          type: object
+          properties:
+            value:
+              type: integer
+            change:
+              type: string
+        sales:
+          type: object
+          properties:
+            value:
+              type: integer
+            change:
+              type: string
+        activeNow:
+          type: object
+          properties:
+            value:
+              type: integer
+            change:
+              type: string
+
+    DashboardOverview:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              total:
+                type: number
+
+    RecentSale:
+      type: object
+      required:
+        - name
+        - email
+        - amount
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: string
+        amount:
+          type: number
+
+    RecentSalesResponse:
+      type: object
+      required:
+        - data
+        - totalSales
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecentSale'
+        totalSales:
+          type: integer
+
+    # ==================== COMMON SCHEMAS ====================
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - pageSize
+        - total
+        - totalPages
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code, e.g., "PRODUCT_NOT_FOUND"
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: string
+          description: Full error chain for debugging (empty in production)
