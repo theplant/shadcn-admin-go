@@ -53,7 +53,7 @@ func generateTaskID(num int) string {
 func padNumber(num, width int) string {
 	s := ""
 	for i := 0; i < width; i++ {
-		s = string('0'+num%10) + s
+		s = string(rune('0'+num%10)) + s
 		num /= 10
 	}
 	return s

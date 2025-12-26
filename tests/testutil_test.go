@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	api "github.com/sunfmin/shadcn-admin-go/api/gen/admin"
 	"github.com/sunfmin/shadcn-admin-go/internal/models"
 	"github.com/sunfmin/shadcn-admin-go/services"
 	"github.com/testcontainers/testcontainers-go"
@@ -174,4 +175,23 @@ func createTestChatMessage(t *testing.T, db *gorm.DB, chatID, sender, message st
 	}
 
 	return msg
+}
+
+// createTestHandler creates an OgenHandler with all services for testing
+func createTestHandler(db *gorm.DB) api.Handler {
+	authService := services.NewAuthService(db).Build()
+	userService := services.NewUserService(db).Build()
+	taskService := services.NewTaskService(db).Build()
+	appService := services.NewAppService(db).Build()
+	chatService := services.NewChatService(db).Build()
+	dashboardService := services.NewDashboardService().Build()
+
+	return services.NewOgenHandler().
+		WithAuthService(authService).
+		WithUserService(userService).
+		WithTaskService(taskService).
+		WithAppService(appService).
+		WithChatService(chatService).
+		WithDashboardService(dashboardService).
+		Build()
 }

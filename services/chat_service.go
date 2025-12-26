@@ -11,8 +11,35 @@ import (
 	"gorm.io/gorm"
 )
 
-// ListChats implements api.Handler.
-func (s *AdminService) ListChats(ctx context.Context, params api.ListChatsParams) (*api.ChatListResponse, error) {
+// ChatService interface for chat operations
+type ChatService interface {
+	List(ctx context.Context, params api.ListChatsParams) (*api.ChatListResponse, error)
+	Get(ctx context.Context, params api.GetChatParams) (api.GetChatRes, error)
+	SendMessage(ctx context.Context, req *api.SendMessageRequest, params api.SendMessageParams) (*api.ChatMessage, error)
+}
+
+// chatServiceImpl implements ChatService
+type chatServiceImpl struct {
+	db *gorm.DB
+}
+
+// chatServiceBuilder is the builder for ChatService
+type chatServiceBuilder struct {
+	db *gorm.DB
+}
+
+// NewChatService creates a new ChatService builder
+func NewChatService(db *gorm.DB) *chatServiceBuilder {
+	return &chatServiceBuilder{db: db}
+}
+
+// Build creates the ChatService
+func (b *chatServiceBuilder) Build() ChatService {
+	return &chatServiceImpl{db: b.db}
+}
+
+// List implements ChatService
+func (s *chatServiceImpl) List(ctx context.Context, params api.ListChatsParams) (*api.ChatListResponse, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -41,8 +68,8 @@ func (s *AdminService) ListChats(ctx context.Context, params api.ListChatsParams
 	}, nil
 }
 
-// GetChat implements api.Handler.
-func (s *AdminService) GetChat(ctx context.Context, params api.GetChatParams) (api.GetChatRes, error) {
+// Get implements ChatService
+func (s *chatServiceImpl) Get(ctx context.Context, params api.GetChatParams) (api.GetChatRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -61,8 +88,8 @@ func (s *AdminService) GetChat(ctx context.Context, params api.GetChatParams) (a
 	return &result, nil
 }
 
-// SendMessage implements api.Handler.
-func (s *AdminService) SendMessage(ctx context.Context, req *api.SendMessageRequest, params api.SendMessageParams) (*api.ChatMessage, error) {
+// SendMessage implements ChatService
+func (s *chatServiceImpl) SendMessage(ctx context.Context, req *api.SendMessageRequest, params api.SendMessageParams) (*api.ChatMessage, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

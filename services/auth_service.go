@@ -12,8 +12,35 @@ import (
 	"gorm.io/gorm"
 )
 
-// Login implements api.Handler.
-func (s *AdminService) Login(ctx context.Context, req *api.LoginRequest) (api.LoginRes, error) {
+// AuthService interface for authentication operations
+type AuthService interface {
+	Login(ctx context.Context, req *api.LoginRequest) (api.LoginRes, error)
+	Logout(ctx context.Context) error
+	GetCurrentUser(ctx context.Context) (api.GetCurrentUserRes, error)
+}
+
+// authServiceImpl implements AuthService
+type authServiceImpl struct {
+	db *gorm.DB
+}
+
+// authServiceBuilder is the builder for AuthService
+type authServiceBuilder struct {
+	db *gorm.DB
+}
+
+// NewAuthService creates a new AuthService builder
+func NewAuthService(db *gorm.DB) *authServiceBuilder {
+	return &authServiceBuilder{db: db}
+}
+
+// Build creates the AuthService
+func (b *authServiceBuilder) Build() AuthService {
+	return &authServiceImpl{db: b.db}
+}
+
+// Login implements AuthService
+func (s *authServiceImpl) Login(ctx context.Context, req *api.LoginRequest) (api.LoginRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -46,13 +73,13 @@ func (s *AdminService) Login(ctx context.Context, req *api.LoginRequest) (api.Lo
 	}, nil
 }
 
-// Logout implements api.Handler.
-func (s *AdminService) Logout(ctx context.Context) error {
+// Logout implements AuthService
+func (s *authServiceImpl) Logout(ctx context.Context) error {
 	return nil
 }
 
-// GetCurrentUser implements api.Handler.
-func (s *AdminService) GetCurrentUser(ctx context.Context) (api.GetCurrentUserRes, error) {
+// GetCurrentUser implements AuthService
+func (s *authServiceImpl) GetCurrentUser(ctx context.Context) (api.GetCurrentUserRes, error) {
 	return &api.GetCurrentUserUnauthorized{}, nil
 }
 

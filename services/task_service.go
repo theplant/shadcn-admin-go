@@ -10,8 +10,37 @@ import (
 	"gorm.io/gorm"
 )
 
-// ListTasks implements api.Handler.
-func (s *AdminService) ListTasks(ctx context.Context, params api.ListTasksParams) (*api.TaskListResponse, error) {
+// TaskService interface for task operations
+type TaskService interface {
+	List(ctx context.Context, params api.ListTasksParams) (*api.TaskListResponse, error)
+	Create(ctx context.Context, req *api.CreateTaskRequest) (*api.Task, error)
+	Get(ctx context.Context, params api.GetTaskParams) (api.GetTaskRes, error)
+	Update(ctx context.Context, req *api.UpdateTaskRequest, params api.UpdateTaskParams) (api.UpdateTaskRes, error)
+	Delete(ctx context.Context, params api.DeleteTaskParams) (api.DeleteTaskRes, error)
+}
+
+// taskServiceImpl implements TaskService
+type taskServiceImpl struct {
+	db *gorm.DB
+}
+
+// taskServiceBuilder is the builder for TaskService
+type taskServiceBuilder struct {
+	db *gorm.DB
+}
+
+// NewTaskService creates a new TaskService builder
+func NewTaskService(db *gorm.DB) *taskServiceBuilder {
+	return &taskServiceBuilder{db: db}
+}
+
+// Build creates the TaskService
+func (b *taskServiceBuilder) Build() TaskService {
+	return &taskServiceImpl{db: b.db}
+}
+
+// List implements TaskService
+func (s *taskServiceImpl) List(ctx context.Context, params api.ListTasksParams) (*api.TaskListResponse, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -27,8 +56,8 @@ func (s *AdminService) ListTasks(ctx context.Context, params api.ListTasksParams
 	// Apply filters
 	if len(params.Status) > 0 {
 		statuses := make([]string, len(params.Status))
-		for i, s := range params.Status {
-			statuses[i] = string(s)
+		for i, st := range params.Status {
+			statuses[i] = string(st)
 		}
 		query = query.Where("status IN ?", statuses)
 	}
@@ -76,8 +105,8 @@ func (s *AdminService) ListTasks(ctx context.Context, params api.ListTasksParams
 	}, nil
 }
 
-// CreateTask implements api.Handler.
-func (s *AdminService) CreateTask(ctx context.Context, req *api.CreateTaskRequest) (*api.Task, error) {
+// Create implements TaskService
+func (s *taskServiceImpl) Create(ctx context.Context, req *api.CreateTaskRequest) (*api.Task, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -109,8 +138,8 @@ func (s *AdminService) CreateTask(ctx context.Context, req *api.CreateTaskReques
 	return &result, nil
 }
 
-// GetTask implements api.Handler.
-func (s *AdminService) GetTask(ctx context.Context, params api.GetTaskParams) (api.GetTaskRes, error) {
+// Get implements TaskService
+func (s *taskServiceImpl) Get(ctx context.Context, params api.GetTaskParams) (api.GetTaskRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -129,8 +158,8 @@ func (s *AdminService) GetTask(ctx context.Context, params api.GetTaskParams) (a
 	return &result, nil
 }
 
-// UpdateTask implements api.Handler.
-func (s *AdminService) UpdateTask(ctx context.Context, req *api.UpdateTaskRequest, params api.UpdateTaskParams) (api.UpdateTaskRes, error) {
+// Update implements TaskService
+func (s *taskServiceImpl) Update(ctx context.Context, req *api.UpdateTaskRequest, params api.UpdateTaskParams) (api.UpdateTaskRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -184,8 +213,8 @@ func (s *AdminService) UpdateTask(ctx context.Context, req *api.UpdateTaskReques
 	return &result, nil
 }
 
-// DeleteTask implements api.Handler.
-func (s *AdminService) DeleteTask(ctx context.Context, params api.DeleteTaskParams) (api.DeleteTaskRes, error) {
+// Delete implements TaskService
+func (s *taskServiceImpl) Delete(ctx context.Context, params api.DeleteTaskParams) (api.DeleteTaskRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

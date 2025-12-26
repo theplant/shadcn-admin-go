@@ -34,13 +34,28 @@ func main() {
 		handlers.SetHideErrorDetails(true)
 	}
 
-	// Create service (implements ogen Handler interface)
-	service := services.NewAdminService(db).Build()
+	// Create individual domain services
+	authService := services.NewAuthService(db).Build()
+	userService := services.NewUserService(db).Build()
+	taskService := services.NewTaskService(db).Build()
+	appService := services.NewAppService(db).Build()
+	chatService := services.NewChatService(db).Build()
+	dashboardService := services.NewDashboardService().Build()
 
-	// Create server via handlers package (includes ErrorHandler)
-	server, err := handlers.NewServer(service)
+	// Create OgenHandler with all services
+	handler := services.NewOgenHandler().
+		WithAuthService(authService).
+		WithUserService(userService).
+		WithTaskService(taskService).
+		WithAppService(appService).
+		WithChatService(chatService).
+		WithDashboardService(dashboardService).
+		Build()
+
+	// Create router with ogen server
+	router, err := handlers.NewRouter(handler).Build()
 	if err != nil {
-		log.Fatalf("Failed to create server: %v", err)
+		log.Fatalf("Failed to create router: %v", err)
 	}
 
 	// Get port from environment
@@ -50,7 +65,7 @@ func main() {
 	}
 
 	log.Printf("Starting server on :%s", port)
-	if err := http.ListenAndServe(":"+port, server); err != nil {
+	if err := http.ListenAndServe(":"+port, router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

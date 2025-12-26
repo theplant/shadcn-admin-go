@@ -6,15 +6,44 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	api "github.com/sunfmin/shadcn-admin-go/api/gen/admin"
 	"github.com/sunfmin/shadcn-admin-go/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-// ListUsers implements api.Handler.
-func (s *AdminService) ListUsers(ctx context.Context, params api.ListUsersParams) (*api.UserListResponse, error) {
+// UserService interface for user operations
+type UserService interface {
+	List(ctx context.Context, params api.ListUsersParams) (*api.UserListResponse, error)
+	Create(ctx context.Context, req *api.CreateUserRequest) (*api.User, error)
+	Get(ctx context.Context, params api.GetUserParams) (api.GetUserRes, error)
+	Update(ctx context.Context, req *api.UpdateUserRequest, params api.UpdateUserParams) (api.UpdateUserRes, error)
+	Delete(ctx context.Context, params api.DeleteUserParams) (api.DeleteUserRes, error)
+	Invite(ctx context.Context, req *api.InviteUserRequest) (*api.User, error)
+}
+
+// userServiceImpl implements UserService
+type userServiceImpl struct {
+	db *gorm.DB
+}
+
+// userServiceBuilder is the builder for UserService
+type userServiceBuilder struct {
+	db *gorm.DB
+}
+
+// NewUserService creates a new UserService builder
+func NewUserService(db *gorm.DB) *userServiceBuilder {
+	return &userServiceBuilder{db: db}
+}
+
+// Build creates the UserService
+func (b *userServiceBuilder) Build() UserService {
+	return &userServiceImpl{db: b.db}
+}
+
+// List implements UserService
+func (s *userServiceImpl) List(ctx context.Context, params api.ListUsersParams) (*api.UserListResponse, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -30,8 +59,8 @@ func (s *AdminService) ListUsers(ctx context.Context, params api.ListUsersParams
 	// Apply filters
 	if len(params.Status) > 0 {
 		statuses := make([]string, len(params.Status))
-		for i, s := range params.Status {
-			statuses[i] = string(s)
+		for i, st := range params.Status {
+			statuses[i] = string(st)
 		}
 		query = query.Where("status IN ?", statuses)
 	}
@@ -79,8 +108,8 @@ func (s *AdminService) ListUsers(ctx context.Context, params api.ListUsersParams
 	}, nil
 }
 
-// CreateUser implements api.Handler.
-func (s *AdminService) CreateUser(ctx context.Context, req *api.CreateUserRequest) (*api.User, error) {
+// Create implements UserService
+func (s *userServiceImpl) Create(ctx context.Context, req *api.CreateUserRequest) (*api.User, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -121,8 +150,8 @@ func (s *AdminService) CreateUser(ctx context.Context, req *api.CreateUserReques
 	return &result, nil
 }
 
-// GetUser implements api.Handler.
-func (s *AdminService) GetUser(ctx context.Context, params api.GetUserParams) (api.GetUserRes, error) {
+// Get implements UserService
+func (s *userServiceImpl) Get(ctx context.Context, params api.GetUserParams) (api.GetUserRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -141,8 +170,8 @@ func (s *AdminService) GetUser(ctx context.Context, params api.GetUserParams) (a
 	return &result, nil
 }
 
-// UpdateUser implements api.Handler.
-func (s *AdminService) UpdateUser(ctx context.Context, req *api.UpdateUserRequest, params api.UpdateUserParams) (api.UpdateUserRes, error) {
+// Update implements UserService
+func (s *userServiceImpl) Update(ctx context.Context, req *api.UpdateUserRequest, params api.UpdateUserParams) (api.UpdateUserRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -193,8 +222,8 @@ func (s *AdminService) UpdateUser(ctx context.Context, req *api.UpdateUserReques
 	return &result, nil
 }
 
-// DeleteUser implements api.Handler.
-func (s *AdminService) DeleteUser(ctx context.Context, params api.DeleteUserParams) (api.DeleteUserRes, error) {
+// Delete implements UserService
+func (s *userServiceImpl) Delete(ctx context.Context, params api.DeleteUserParams) (api.DeleteUserRes, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -213,8 +242,8 @@ func (s *AdminService) DeleteUser(ctx context.Context, params api.DeleteUserPara
 	return &api.DeleteUserNoContent{}, nil
 }
 
-// InviteUser implements api.Handler.
-func (s *AdminService) InviteUser(ctx context.Context, req *api.InviteUserRequest) (*api.User, error) {
+// Invite implements UserService
+func (s *userServiceImpl) Invite(ctx context.Context, req *api.InviteUserRequest) (*api.User, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -276,9 +305,4 @@ func userToAPI(u models.User) api.User {
 func isDuplicateKeyError(err error) bool {
 	return strings.Contains(err.Error(), "duplicate key") ||
 		strings.Contains(err.Error(), "UNIQUE constraint")
-}
-
-// parseUUID parses a string to uuid.UUID
-func parseUUID(s string) (uuid.UUID, error) {
-	return uuid.Parse(s)
 }

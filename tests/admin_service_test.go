@@ -12,7 +12,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	api "github.com/sunfmin/shadcn-admin-go/api/gen/admin"
-	"github.com/sunfmin/shadcn-admin-go/services"
 )
 
 // ogenEncoder is an interface for ogen-generated types that have MarshalJSON
@@ -50,8 +49,8 @@ func TestAuthLogin(t *testing.T) {
 
 	testUser := createTestUser(t, db, "test@test.com", "password123", "admin")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -134,8 +133,8 @@ func TestAuthLogout(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -154,8 +153,8 @@ func TestAuthGetCurrentUser(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -175,8 +174,8 @@ func TestUserCRUD(t *testing.T) {
 	defer cleanup()
 	defer truncateTables(db, "users")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -282,8 +281,8 @@ func TestUserInvite(t *testing.T) {
 	defer cleanup()
 	defer truncateTables(db, "users")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -329,8 +328,8 @@ func TestTaskCRUD(t *testing.T) {
 	defer cleanup()
 	defer truncateTables(db, "tasks")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -485,8 +484,8 @@ func TestAppOperations(t *testing.T) {
 	createTestApp(t, db, "slack", "Slack", "Team messaging", false)
 	createTestApp(t, db, "github", "GitHub", "Code hosting", true)
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -578,8 +577,8 @@ func TestChatOperations(t *testing.T) {
 	chat := createTestChat(t, db, "chat-1", "johndoe", "John Doe")
 	createTestChatMessage(t, db, chat.ID, "johndoe", "Hello!")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -666,8 +665,8 @@ func TestDashboardEndpoints(t *testing.T) {
 	db, cleanup := setupTestDB(t)
 	defer cleanup()
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -738,8 +737,8 @@ func TestUserFilters(t *testing.T) {
 	ctx := context.Background()
 	db.WithContext(ctx).Exec("UPDATE users SET status = 'inactive' WHERE email = 'active2@test.com'")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}
@@ -790,8 +789,8 @@ func TestTaskFilters(t *testing.T) {
 	createTestTask(t, db, "TASK-0002", "Feature request", "in progress", "feature", "medium")
 	createTestTask(t, db, "TASK-0003", "Documentation", "done", "documentation", "low")
 
-	service := services.NewAdminService(db).Build()
-	server, err := api.NewServer(service)
+	handler := createTestHandler(db)
+	server, err := api.NewServer(handler)
 	if err != nil {
 		t.Fatalf("Failed to create server: %v", err)
 	}

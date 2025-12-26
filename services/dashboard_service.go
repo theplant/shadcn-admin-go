@@ -6,8 +6,31 @@ import (
 	api "github.com/sunfmin/shadcn-admin-go/api/gen/admin"
 )
 
-// GetDashboardStats implements api.Handler.
-func (s *AdminService) GetDashboardStats(ctx context.Context) (*api.DashboardStats, error) {
+// DashboardService interface for dashboard operations
+type DashboardService interface {
+	GetStats(ctx context.Context) (*api.DashboardStats, error)
+	GetOverview(ctx context.Context) (*api.DashboardOverview, error)
+	GetRecentSales(ctx context.Context) (*api.RecentSalesResponse, error)
+}
+
+// dashboardServiceImpl implements DashboardService
+type dashboardServiceImpl struct{}
+
+// dashboardServiceBuilder is the builder for DashboardService
+type dashboardServiceBuilder struct{}
+
+// NewDashboardService creates a new DashboardService builder
+func NewDashboardService() *dashboardServiceBuilder {
+	return &dashboardServiceBuilder{}
+}
+
+// Build creates the DashboardService
+func (b *dashboardServiceBuilder) Build() DashboardService {
+	return &dashboardServiceImpl{}
+}
+
+// GetStats implements DashboardService
+func (s *dashboardServiceImpl) GetStats(ctx context.Context) (*api.DashboardStats, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -35,8 +58,8 @@ func (s *AdminService) GetDashboardStats(ctx context.Context) (*api.DashboardSta
 	}, nil
 }
 
-// GetDashboardOverview implements api.Handler.
-func (s *AdminService) GetDashboardOverview(ctx context.Context) (*api.DashboardOverview, error) {
+// GetOverview implements DashboardService
+func (s *dashboardServiceImpl) GetOverview(ctx context.Context) (*api.DashboardOverview, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -64,8 +87,8 @@ func (s *AdminService) GetDashboardOverview(ctx context.Context) (*api.Dashboard
 	}, nil
 }
 
-// GetRecentSales implements api.Handler.
-func (s *AdminService) GetRecentSales(ctx context.Context) (*api.RecentSalesResponse, error) {
+// GetRecentSales implements DashboardService
+func (s *dashboardServiceImpl) GetRecentSales(ctx context.Context) (*api.RecentSalesResponse, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

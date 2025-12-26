@@ -4,15 +4,41 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	api "github.com/sunfmin/shadcn-admin-go/api/gen/admin"
 	"github.com/sunfmin/shadcn-admin-go/internal/models"
 	"gorm.io/gorm"
 )
 
-// ListApps implements api.Handler.
-func (s *AdminService) ListApps(ctx context.Context, params api.ListAppsParams) (*api.AppListResponse, error) {
+// AppService interface for app operations
+type AppService interface {
+	List(ctx context.Context, params api.ListAppsParams) (*api.AppListResponse, error)
+	Connect(ctx context.Context, params api.ConnectAppParams) (*api.App, error)
+	Disconnect(ctx context.Context, params api.DisconnectAppParams) (*api.App, error)
+}
+
+// appServiceImpl implements AppService
+type appServiceImpl struct {
+	db *gorm.DB
+}
+
+// appServiceBuilder is the builder for AppService
+type appServiceBuilder struct {
+	db *gorm.DB
+}
+
+// NewAppService creates a new AppService builder
+func NewAppService(db *gorm.DB) *appServiceBuilder {
+	return &appServiceBuilder{db: db}
+}
+
+// Build creates the AppService
+func (b *appServiceBuilder) Build() AppService {
+	return &appServiceImpl{db: b.db}
+}
+
+// List implements AppService
+func (s *appServiceImpl) List(ctx context.Context, params api.ListAppsParams) (*api.AppListResponse, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -62,8 +88,8 @@ func (s *AdminService) ListApps(ctx context.Context, params api.ListAppsParams) 
 	}, nil
 }
 
-// ConnectApp implements api.Handler.
-func (s *AdminService) ConnectApp(ctx context.Context, params api.ConnectAppParams) (*api.App, error) {
+// Connect implements AppService
+func (s *appServiceImpl) Connect(ctx context.Context, params api.ConnectAppParams) (*api.App, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -87,8 +113,8 @@ func (s *AdminService) ConnectApp(ctx context.Context, params api.ConnectAppPara
 	return &result, nil
 }
 
-// DisconnectApp implements api.Handler.
-func (s *AdminService) DisconnectApp(ctx context.Context, params api.DisconnectAppParams) (*api.App, error) {
+// Disconnect implements AppService
+func (s *appServiceImpl) Disconnect(ctx context.Context, params api.DisconnectAppParams) (*api.App, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -126,9 +152,4 @@ func appToAPI(a models.App) api.App {
 	}
 
 	return result
-}
-
-// generateAppID generates a unique app ID
-func generateAppID(name string) string {
-	return strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 }
